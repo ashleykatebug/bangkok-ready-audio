@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bangkok Ready Audio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BKK Audio">
+<meta name="theme-color" content="#0E1220">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Sarabun:wght@400;600;700&display=swap">
+<style>
+<style>
+:root{color-scheme:dark; --bg:#0E1220; --bg2:#161B2E; --ink:#F4F1EA; --dim:#9AA1BC; --faint:#5F6684; --accent:#F2A93B; --teal:#3FBFA6; --pink:#FF6F91;}
+html,body{background:var(--bg);}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:"Sarabun",-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+*{box-sizing:border-box;} button{font-family:inherit;color:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:max(18px,env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Fraunces",serif;font-size:17px;color:var(--dim);letter-spacing:.01em;}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;}
+.art{margin:34px auto 0;width:min(78vw,300px);aspect-ratio:1;border-radius:32px;position:relative;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.05);background:linear-gradient(160deg,#CE4269 0%,#D9820F 55%,#F2A93B 100%);}
+.art .th{position:absolute;left:24px;bottom:22px;font-size:64px;font-weight:700;line-height:1;color:#fff;text-shadow:0 8px 30px rgba(0,0,0,.35);}
+.art .n{position:absolute;left:24px;top:22px;font-family:"Fraunces",serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85);}
+.art .sun{position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,244,214,.95),rgba(255,211,122,.35) 55%,transparent 72%);}
+.art .lines{position:absolute;left:0;right:0;bottom:0;height:46%;background:repeating-linear-gradient(180deg,transparent 0 22px,rgba(0,0,0,.06) 22px 24px);}
+.art .playing{position:absolute;right:22px;bottom:26px;display:flex;gap:4px;align-items:flex-end;height:26px;}
+.art .playing b{width:5px;background:#fff;border-radius:3px;height:8px;opacity:.9;animation:eq 1s ease-in-out infinite;}
+.art .playing b:nth-child(2){animation-delay:.15s}.art .playing b:nth-child(3){animation-delay:.3s}.art .playing b:nth-child(4){animation-delay:.45s}
+@keyframes eq{0%,100%{height:8px}50%{height:26px}}
+.art .playing.off b{animation:none;height:8px;opacity:.45}
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;letter-spacing:-.01em;text-align:center;}
+.sub{color:var(--dim);text-align:center;margin-top:6px;font-size:14px;}
+.section{color:var(--accent);text-align:center;margin-top:14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;min-height:18px;}
+.bar{margin-top:26px;height:34px;display:flex;align-items:center;cursor:pointer;}
+.bar .track{position:relative;height:6px;width:100%;border-radius:99px;background:rgba(255,255,255,.14);}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--accent);width:0;}
+.bar .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5);}
+.times{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:var(--dim);font-size:13px;margin-top:-4px;}
+.ctrl{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:22px;}
+.ctrl button{background:none;border:none;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--dim);}
+.ctrl svg{width:34px;height:34px;fill:var(--ink);}
+.ctrl .play{width:88px;height:88px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 40px -10px rgba(244,241,234,.55);}
+.ctrl .play svg{width:38px;height:38px;fill:var(--bg);}
+.play:active{transform:scale(.96);}
+.speed{display:flex;justify-content:center;gap:8px;margin-top:22px;}
+.speed button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--dim);}
+.speed button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.note{color:var(--faint);font-size:12.5px;text-align:center;margin-top:22px;line-height:1.5;}
+.lessons{margin-top:auto;padding-top:26px;}
+.lesson{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid rgba(255,255,255,.08);}
+.lesson .num{width:42px;height:42px;border-radius:12px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-family:"Fraunces",serif;font-size:18px;color:var(--accent);flex:none;}
+.lesson .t{flex:1;min-width:0;} .lesson .t b{display:block;font-size:15px;} .lesson .t span{color:var(--dim);font-size:12.5px;}
+.lesson .done{color:var(--teal);font-size:12px;font-weight:700;}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.in{opacity:1;}
+</style>
+.ctrl button:disabled{cursor:default;}
+.ctrl .small svg{width:30px;height:30px;}
+.status{color:var(--pink);text-align:center;font-size:13px;margin-top:14px;line-height:1.5;}
+.retry{display:block;margin:10px auto 0;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:9px 18px;font-size:14px;font-weight:700;}
+.net{background:rgba(255,111,145,.15);color:var(--pink);text-align:center;font-size:12.5px;padding:8px 12px;border-radius:12px;margin-top:14px;}
+.offline{margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center;}
+.offline button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--ink);border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;}
+.offline small{color:var(--faint);font-size:12px;}
+.lesson .t{cursor:pointer;} .lesson .num{cursor:pointer;}
+.lesson .dl{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--dim);font-size:16px;flex:none;}
+.lesson .dl.on{color:var(--teal);border-color:rgba(63,191,166,.5);}
+#debug{position:fixed;left:0;right:0;bottom:0;max-height:38vh;overflow:auto;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 ui-monospace,monospace;padding:8px;white-space:pre-wrap;z-index:9;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><i></i>Bangkok Ready Audio</div>
+  <div class="art"><div class="sun"></div><div class="lines"></div><div class="n">Thai · Level 1</div><div class="th" id="artTh">๑</div><div class="playing off" id="eq"><b></b><b></b><b></b><b></b></div></div>
+  <h1 id="title">Bangkok Ready Audio</h1>
+  <div class="sub" id="sub">Loading lessons…</div>
+  <div class="section" id="section"></div>
+  <div class="bar" id="bar"><div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob" style="left:0"></div></div></div>
+  <div class="times"><span id="tcur">0:00</span><span id="trem">-0:00</span></div>
+  <div class="ctrl">
+    <button id="prev" class="small" aria-label="Previous lesson"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg><span>prev</span></button>
+    <button id="back" aria-label="Back 15 seconds"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/><text x="8.6" y="16.4" font-size="7.5" font-weight="700" font-family="sans-serif">15</text></svg></button>
+    <button id="play" class="play" aria-label="Play"><svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <button id="fwd" aria-label="Forward 15 seconds"><svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6h2c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8z"/><text x="8.6" y="16.4" font-size="7.5" font-weight="700" font-family="sans-serif">15</text></svg></button>
+    <button id="next" class="small" aria-label="Next lesson"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg><span>next</span></button>
+  </div>
+  <div class="speed" id="speed"><button data-r="0.8">0.8×</button><button data-r="1" class="on">1×</button><button data-r="1.1">1.1×</button><button data-r="1.2">1.2×</button></div>
+  <div class="status" id="status" hidden></div>
+  <button class="retry" id="retry" hidden>Retry</button>
+  <div class="net" id="net" hidden>You're offline. Saved lessons still play; others need a connection.</div>
+  <div class="note">Works with the screen locked, in the car, and on AirPods — lock-screen controls included.<br>Nothing to tap during the lesson. Just answer out loud.</div>
+  <div class="offline"><button id="dlall">Download all of Level 1</button><small id="storage"></small></div>
+  <div class="lessons" id="lessons"></div>
+</div>
+<div class="toast" id="toast"></div>
+<pre id="debug" hidden></pre>
+<audio id="audio" preload="auto" playsinline></audio>
+<script src="app.js"></script>
+</body>
+</html>
