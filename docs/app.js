@@ -29,6 +29,7 @@
     if (!validPos(t, isFinite(d) ? d : 0)) return;
     if (state === S.ENDED) { store.pos[cur.id] = 0; }
     else if (t > 2) store.pos[cur.id] = Math.floor(t * 10) / 10;
+    else if (audio.readyState >= 1 && store.pos[cur.id] > 2) store.pos[cur.id] = 0;   // user rewound to the start: forget the old resume point
     if (isFinite(d) && d > 0) store.dur[cur.id] = Math.round(d);
     store.last[cur.id] = Date.now(); store.current = cur.id; save(reason === 'force');
   }
