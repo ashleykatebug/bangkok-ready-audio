@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const VERSION = 'v2.0';
+  const VERSION = 'v2.1';
   const KEY = 'bkk_audio_v1';                 // same key as the previous player → progress carries over
   const AUDIO_CACHE = 'bkk-audio-v1';
   const S = { IDLE: 'IDLE', LOADING: 'LOADING', READY: 'READY', PLAYING: 'PLAYING', PAUSED: 'PAUSED', SEEKING: 'SEEKING', SWITCHING: 'SWITCHING', ENDED: 'ENDED', ERROR: 'ERROR' };
@@ -70,6 +70,7 @@
     if (abortCtl) abortCtl.abort(); abortCtl = new AbortController();
     pendingAutoplay = false; lastError = null;
     setState(S.SWITCHING);
+    try { document.dispatchEvent(new CustomEvent('bkk:switching', { detail: { id: lesson.id, gen: myGen } })); } catch (e) { }
     try { audio.pause(); audio.removeAttribute('src'); audio.load(); } catch (e) { }
     attachedGen = 0;
     cur = lesson; store.current = lesson.id; save(true);
@@ -98,6 +99,7 @@
       audio.playbackRate = store.rate || 1;
       log('SOURCE_READY', { id: lesson.id, duration: Math.round(d) });
       setState(S.READY); $('sub').textContent = SUB_DEFAULT; paint(); mediaMeta();
+      try { document.dispatchEvent(new CustomEvent('bkk:lesson', { detail: { id: lesson.id, gen: myGen } })); } catch (e) { log('TRANSCRIPT_HOOK_FAIL', { msg: String(e) }); }
       if (autoplay || pendingAutoplay) { pendingAutoplay = false; play('after-switch'); }
     };
     audio.addEventListener('loadedmetadata', onMeta);
@@ -274,6 +276,6 @@
     await loadLesson(LESSONS.find(l => l.id === startId), { autoplay: false });   // never autoplay on open
     log('BOOT', { version: VERSION, lesson: startId });
   }
-  window.__bkk = { get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
+  window.__bkk = { logEvent: log, get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
   boot();
 })();

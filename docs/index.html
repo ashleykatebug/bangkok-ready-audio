@@ -18,7 +18,7 @@
 :root{color-scheme:dark; --bg:#0E1220; --bg2:#161B2E; --ink:#F4F1EA; --dim:#9AA1BC; --faint:#5F6684; --accent:#F2A93B; --teal:#3FBFA6; --pink:#FF6F91;}
 html,body{background:var(--bg);}
 body{margin:0;min-height:100vh;color:var(--ink);font-family:"Sarabun",-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
-*{box-sizing:border-box;} button{font-family:inherit;color:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+*{box-sizing:border-box;} [hidden]{display:none!important;} button{font-family:inherit;color:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 .app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:max(18px,env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));}
 .brand{display:flex;align-items:center;gap:10px;font-family:"Fraunces",serif;font-size:17px;color:var(--dim);letter-spacing:.01em;}
 .brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;}
@@ -69,15 +69,56 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
 .lesson .dl{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--dim);font-size:16px;flex:none;}
 .lesson .dl.on{color:var(--teal);border-color:rgba(63,191,166,.5);}
 #debug{position:fixed;left:0;right:0;bottom:0;max-height:38vh;overflow:auto;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 ui-monospace,monospace;padding:8px;white-space:pre-wrap;z-index:9;}
+
+/* ---- transcript (reading layout) ---- */
+.tmode{display:flex;justify-content:center;gap:6px;margin-top:14px;}
+.tmode button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--dim);}
+.tmode button.on{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.tmode .lbl{color:var(--faint);font-size:12px;align-self:center;margin-right:4px;}
+#transcript{display:flex;flex-direction:column;min-height:0;flex:1;position:relative;margin:14px -22px 0;}
+#tscroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:34vh 22px 44vh;scroll-behavior:smooth;mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 26px),transparent 100%);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 26px),transparent 100%);}
+.tp{padding:9px 0 9px 14px;margin:6px 0;border-left:2px solid transparent;opacity:.42;transition:opacity .35s ease;cursor:pointer;font-size:19px;line-height:1.55;max-width:38ch;}
+.tp.on{opacity:1;}
+.tp.narrator{font-size:17.5px;color:var(--ink);}
+.tp.thai-f,.tp.thai-m{font-size:20px;}
+.tp.thai-f{border-left-color:rgba(242,169,59,.55);} .tp.thai-m{border-left-color:rgba(63,191,166,.55);}
+.tp.thai-m .tl::before{content:"male speaker";display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:2px;}
+.tp.thai-f .tl::before{content:"";}
+.tw{border-radius:5px;padding:0 1px;transition:color .12s ease,background-color .12s ease;}
+.tp.on .tw.now{color:var(--accent);font-weight:700;background:rgba(242,169,59,.14);}
+.tp.on .tw.pair.now b{color:var(--accent);}
+.tw.pair{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;margin:0 2px 6px 0;}
+.tw.pair b{font-weight:600;font-size:21px;line-height:1.35;} .tw.pair i{font-style:normal;font-size:13.5px;color:var(--dim);line-height:1.3;}
+.tp.on .tw.pair.now i{color:var(--accent);}
+.tsec{color:var(--accent);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:26px 0 6px 14px;opacity:.85;}
+.tmsg{color:var(--faint);text-align:center;font-size:14px;padding:30px 0;}
+#tfollow{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);border:none;background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;box-shadow:0 8px 24px -8px rgba(0,0,0,.7);}
+/* reading layout: compact header, scrolling transcript, controls docked at the bottom */
+.app.reading{height:100vh;height:100dvh;min-height:0;overflow:hidden;padding-bottom:0;} .app.reading .dock{background:var(--bg);position:relative;z-index:2;} .app.reading>*{flex:none;} .app.reading>#transcript{flex:1 1 0;min-height:0;}
+.app.reading .art{width:56px;margin:14px 0 0;border-radius:14px;box-shadow:none;}
+.app.reading .art .th{font-size:22px;left:0;right:0;bottom:12px;text-align:center;} .app.reading .art .n,.app.reading .art .sun,.app.reading .art .lines,.app.reading .art .playing{display:none;}
+.head{display:flex;flex-direction:column;align-items:stretch;} .headt{display:contents;}
+.app.reading .head{display:flex;flex-direction:row;align-items:center;gap:14px;} .app.reading .headt{display:block;min-width:0;}
+.app.reading h1{font-size:18px;margin:0;text-align:left;} .app.reading .sub{text-align:left;margin-top:2px;font-size:12.5px;}
+.app.reading .section{margin-top:8px;}
+.app.reading .note,.app.reading .offline,.app.reading .lessons{display:none;}
+.app.reading .dock{padding-bottom:max(10px,env(safe-area-inset-bottom));}
+.app.reading .bar{margin-top:8px;height:28px;} .app.reading .ctrl{margin-top:8px;gap:20px;} .app.reading .ctrl .play{width:64px;height:64px;box-shadow:none;} .app.reading .ctrl .play svg{width:30px;height:30px;} .app.reading .ctrl svg{width:30px;height:30px;}
+.app.reading .speed{margin-top:8px;} .app.reading .speed button{padding:5px 11px;font-size:12px;} .app.reading .tmode{margin-top:8px;}
+.app.reading .status,.app.reading .net{margin-top:6px;}
+@media (max-height:640px){ .app.reading .speed{display:none;} }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="brand"><i></i>Bangkok Ready Audio</div>
-  <div class="art"><div class="sun"></div><div class="lines"></div><div class="n">Thai · Level 1</div><div class="th" id="artTh">๑</div><div class="playing off" id="eq"><b></b><b></b><b></b><b></b></div></div>
-  <h1 id="title">Bangkok Ready Audio</h1>
-  <div class="sub" id="sub">Loading lessons…</div>
+  <div class="head">
+    <div class="art"><div class="sun"></div><div class="lines"></div><div class="n">Thai · Level 1</div><div class="th" id="artTh">๑</div><div class="playing off" id="eq"><b></b><b></b><b></b><b></b></div></div>
+    <div class="headt"><h1 id="title">Bangkok Ready Audio</h1><div class="sub" id="sub">Loading lessons…</div></div>
+  </div>
   <div class="section" id="section"></div>
+  <div id="transcript" hidden><div id="tscroll"><div id="tbody"></div></div><button id="tfollow" hidden>↓ Return to current</button></div>
+  <div class="dock">
   <div class="bar" id="bar"><div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob" style="left:0"></div></div></div>
   <div class="times"><span id="tcur">0:00</span><span id="trem">-0:00</span></div>
   <div class="ctrl">
@@ -88,9 +129,11 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
     <button id="next" class="small" aria-label="Next lesson"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg><span>next</span></button>
   </div>
   <div class="speed" id="speed"><button data-r="0.8">0.8×</button><button data-r="1" class="on">1×</button><button data-r="1.1">1.1×</button><button data-r="1.2">1.2×</button></div>
+  <div class="tmode" id="tmode"><span class="lbl">Transcript</span><button data-mode="off">Off</button><button data-mode="rom">Romanized</button><button data-mode="thai">Thai + Romanized</button></div>
   <div class="status" id="status" hidden></div>
   <button class="retry" id="retry" hidden>Retry</button>
   <div class="net" id="net" hidden>You're offline. Saved lessons still play; others need a connection.</div>
+  </div>
   <div class="note">Works with the screen locked, in the car, and on AirPods — lock-screen controls included.<br>Nothing to tap during the lesson. Just answer out loud.</div>
   <div class="offline"><button id="dlall">Download all of Level 1</button><small id="storage"></small></div>
   <div class="lessons" id="lessons"></div>
@@ -99,5 +142,6 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
 <pre id="debug" hidden></pre>
 <audio id="audio" preload="auto" playsinline></audio>
 <script src="app.js"></script>
+<script src="transcript.js"></script>
 </body>
 </html>
