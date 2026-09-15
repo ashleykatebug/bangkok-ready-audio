@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const VERSION = 'v2.2';
+  const VERSION = 'v2.3';
   const KEY = 'bkk_audio_v1';                 // same key as the previous player → progress carries over
   const AUDIO_CACHE = 'bkk-audio-v1';
   const S = { IDLE: 'IDLE', LOADING: 'LOADING', READY: 'READY', PLAYING: 'PLAYING', PAUSED: 'PAUSED', SEEKING: 'SEEKING', SWITCHING: 'SWITCHING', ENDED: 'ENDED', ERROR: 'ERROR' };
@@ -106,6 +106,13 @@
     attachedGen = myGen; audio.src = objectUrl; audio.load();
   }
 
+  // ---------- study audio: object URL of a lesson's audio for the Vocab Bank / Flashcards (same segments, same cache)
+  const studyUrls = new Map();
+  async function lessonAudioUrl(lesson) {
+    if (studyUrls.has(lesson.id)) return studyUrls.get(lesson.id);
+    const p = lessonBlob(lesson, new AbortController().signal).then(b => URL.createObjectURL(b));
+    studyUrls.set(lesson.id, p); p.catch(() => studyUrls.delete(lesson.id)); return p;
+  }
   // ---------- transport
   function play(src) {
     if (!cur) return;
@@ -322,6 +329,6 @@
     await loadLesson(LESSONS.find(l => l.id === startId), { autoplay: false });   // never autoplay on open
     log('BOOT', { version: VERSION, lesson: startId });
   }
-  window.__bkk = { openLibrary, closeLibrary, get libraryOpen() { return libOpen; }, lessonStatus, logEvent: log, get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
+  window.__bkk = { lessonAudioUrl, openLibrary, closeLibrary, get libraryOpen() { return libOpen; }, lessonStatus, logEvent: log, get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
   boot();
 })();
