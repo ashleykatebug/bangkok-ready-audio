@@ -68,6 +68,29 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
 .lesson .t{cursor:pointer;} .lesson .num{cursor:pointer;}
 .lesson .dl{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--dim);font-size:16px;flex:none;}
 .lesson .dl.on{color:var(--teal);border-color:rgba(63,191,166,.5);}
+/* ---- lesson library (button + bottom sheet) ---- */
+.brand{position:relative;}
+.libbtn{margin-left:auto;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--ink);border-radius:999px;padding:7px 13px 7px 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:"Sarabun",system-ui,sans-serif;}
+.libbtn svg{width:18px;height:18px;fill:var(--ink);}
+.libbtn:active{transform:scale(.97);}
+.sheetwrap{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;}
+.sheetwrap[hidden]{display:none;}
+.sheetbg{position:absolute;inset:0;background:rgba(6,8,16,.62);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.sheet{position:relative;width:100%;max-width:520px;max-height:min(86vh,86dvh);background:var(--bg2);border-radius:22px 22px 0 0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06);display:flex;flex-direction:column;padding:8px 0 max(10px,env(safe-area-inset-bottom));animation:sheetin .28s cubic-bezier(.2,.8,.2,1);}
+@keyframes sheetin{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.grab{width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,.22);margin:2px auto 6px;}
+.sheethead{display:flex;align-items:baseline;gap:10px;padding:6px 22px 10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sheethead h2{margin:0;font-family:"Fraunces",serif;font-size:21px;font-weight:600;}
+.sheetsub{color:var(--faint);font-size:12.5px;flex:1;}
+.sheethead .close{align-self:center;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:var(--ink);font-size:14px;cursor:pointer;}
+.sheetlist{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 22px 8px;}
+.sheetlist .lesson:first-child{border-top:none;}
+.lesson.cur{opacity:1;} .lesson.cur .num{background:var(--accent);color:var(--bg);}
+.lesson .t .prog{display:block;height:3px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden;}
+.lesson .t .prog i{display:block;height:100%;background:var(--accent);border-radius:99px;}
+.lesson.done .t .prog i{background:var(--teal);}
+@media (min-width:700px) and (min-height:700px){ .sheetwrap{align-items:center;} .sheet{border-radius:22px;max-height:80vh;padding-bottom:10px;} }
+@media (prefers-reduced-motion:reduce){ .sheet{animation:none;} }
 #debug{position:fixed;left:0;right:0;bottom:0;max-height:38vh;overflow:auto;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 ui-monospace,monospace;padding:8px;white-space:pre-wrap;z-index:9;}
 
 /* ---- transcript (reading layout) ---- */
@@ -111,7 +134,7 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
 </head>
 <body>
 <div class="app">
-  <div class="brand"><i></i>Bangkok Ready Audio</div>
+  <div class="brand"><i></i>Bangkok Ready Audio<button id="libBtn" class="libbtn" aria-label="Lessons" aria-haspopup="dialog" aria-expanded="false" aria-controls="sheet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zM4 16h2v2H4zm4 0h12v2H8z"/></svg><span>Lessons</span></button></div>
   <div class="head">
     <div class="art"><div class="sun"></div><div class="lines"></div><div class="n">Thai · Level 1</div><div class="th" id="artTh">๑</div><div class="playing off" id="eq"><b></b><b></b><b></b><b></b></div></div>
     <div class="headt"><h1 id="title">Bangkok Ready Audio</h1><div class="sub" id="sub">Loading lessons…</div></div>
@@ -137,6 +160,13 @@ h1{font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:30px 0 0;l
   <div class="note">Works with the screen locked, in the car, and on AirPods — lock-screen controls included.<br>Nothing to tap during the lesson. Just answer out loud.</div>
   <div class="offline"><button id="dlall">Download all of Level 1</button><small id="storage"></small></div>
   <div class="lessons" id="lessons"></div>
+</div>
+<div class="sheetwrap" id="sheet" hidden><div class="sheetbg" id="sheetBg"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheethead"><h2 id="sheetTitle">Lessons</h2><span class="sheetsub" id="sheetSub"></span><button class="close" id="sheetClose" aria-label="Close lesson list">✕</button></div>
+    <div class="sheetlist" id="sheetList"></div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 <pre id="debug" hidden></pre>

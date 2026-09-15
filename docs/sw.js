@@ -1,5 +1,5 @@
 /* Bangkok Ready Audio service worker — app shell offline; lesson audio is cached by the app itself. */
-const SHELL = 'bkk-shell-v2.3';
+const SHELL = 'bkk-shell-v2.4';
 const SHELL_FILES = ['./', './index.html', './app.js', './transcript.js', './lessons.json', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png']
   .concat(Array.from({ length: 20 }, (_, i) => './transcripts/lesson' + (i + 1) + '.json'));   // transcripts are tiny: cached with the shell so they work offline
 self.addEventListener('install', e => { e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });

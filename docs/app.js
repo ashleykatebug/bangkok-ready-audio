@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const VERSION = 'v2.1';
+  const VERSION = 'v2.2';
   const KEY = 'bkk_audio_v1';                 // same key as the previous player → progress carries over
   const AUDIO_CACHE = 'bkk-audio-v1';
   const S = { IDLE: 'IDLE', LOADING: 'LOADING', READY: 'READY', PLAYING: 'PLAYING', PAUSED: 'PAUSED', SEEKING: 'SEEKING', SWITCHING: 'SWITCHING', ENDED: 'ENDED', ERROR: 'ERROR' };
@@ -222,15 +222,61 @@
   let cachedSet = {};
   async function refreshCached() { for (const l of LESSONS) cachedSet[l.id] = await isCached(l); renderLessons(); paintStorage(); }
   async function paintStorage() { try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); const n = Object.values(cachedSet).filter(Boolean).length; $('storage').textContent = n + ' of ' + LESSONS.length + ' lessons saved offline · ' + (e.usage / 1048576).toFixed(0) + ' MB used'; } } catch (e) { } }
-  function renderLessons() {
-    $('lessons').innerHTML = LESSONS.map((l) => {
-      const done = store.done[l.id]; const pos = store.pos[l.id] || 0; const isCur = cur && l.id === cur.id;
-      const meta = fmt(l.duration) + (isCur ? (state === S.PLAYING ? ' · now playing' : ' · selected') : (pos > 2 ? ' · resume at ' + fmt(pos) : ''));
-      return '<div class="lesson" data-id="' + l.id + '" style="' + (isCur ? '' : 'opacity:.85') + '"><div class="num">' + l.n + '</div><div class="t"><b>' + l.short + '</b><span>' + meta + '</span></div>' + (done ? '<div class="done">Done ✓</div>' : '') + '<button class="dl' + (cachedSet[l.id] ? ' on' : '') + '" data-dl="' + l.id + '" aria-label="' + (cachedSet[l.id] ? 'Saved offline' : 'Download for offline') + '">' + (cachedSet[l.id] ? '✓' : '↓') + '</button></div>';
-    }).join('');
-    document.querySelectorAll('.lesson .t, .lesson .num').forEach(el => el.addEventListener('click', () => { const l = LESSONS.find(x => x.id === el.parentElement.dataset.id); select(l, true); }));
-    document.querySelectorAll('.lesson .dl').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); download(LESSONS.find(x => x.id === b.dataset.dl)); }));
+  let libOpen = false, libReturnFocus = null;
+  // One renderer for both lesson views (inline list + Lessons sheet): same LESSONS + store data, same select().
+  function lessonStatus(l) {
+    const done = !!store.done[l.id]; const pos = store.pos[l.id] || 0; const isCur = cur && l.id === cur.id;
+    const dur = store.dur[l.id] || l.duration || 0; const frac = dur > 0 ? Math.max(0, Math.min(1, pos / dur)) : 0;
+    let label;
+    if (isCur) label = state === S.PLAYING ? 'Now playing' : (state === S.ENDED ? 'Completed' : (pos > 2 ? 'Current · resume at ' + fmt(pos) : 'Current'));
+    else if (pos > 2) label = 'In progress · resume at ' + fmt(pos);
+    else label = done ? 'Completed' : 'Not started';
+    return { done, pos, isCur, frac, label };
   }
+  function lessonHTML(l) {
+    const st = lessonStatus(l);
+    return '<div class="lesson' + (st.isCur ? ' cur' : '') + (st.done ? ' done' : '') + '" data-id="' + l.id + '" role="button" tabindex="0" aria-current="' + (st.isCur ? 'true' : 'false') + '" aria-label="Lesson ' + l.n + ': ' + l.short + ', ' + st.label + '">'
+      + '<div class="num">' + l.n + '</div><div class="t"><b>' + l.short + '</b><span>' + fmt(l.duration) + ' · ' + st.label + '</span>'
+      + (st.frac > 0.01 && !st.done ? '<span class="prog"><i style="width:' + (st.frac * 100).toFixed(1) + '%"></i></span>' : '') + '</div>'
+      + (st.done ? '<div class="done">Done ✓</div>' : '')
+      + '<button class="dl' + (cachedSet[l.id] ? ' on' : '') + '" data-dl="' + l.id + '" aria-label="' + (cachedSet[l.id] ? 'Saved offline' : 'Download for offline') + '">' + (cachedSet[l.id] ? '✓' : '↓') + '</button></div>';
+  }
+  function renderLessons() {
+    const html = LESSONS.map(lessonHTML).join('');
+    $('lessons').innerHTML = html;
+    const sl = $('sheetList'); if (sl) sl.innerHTML = libOpen ? html : '';   // sheet rows exist only while it is open
+    const n = LESSONS.filter(l => store.done[l.id]).length; const ss = $('sheetSub'); if (ss) ss.textContent = LESSONS.length + ' lessons · ' + n + ' completed';
+  }
+  function onLessonListClick(e) {
+    const dl = e.target.closest('.dl'); if (dl) { e.stopPropagation(); download(LESSONS.find(x => x.id === dl.dataset.dl)); return; }
+    const row = e.target.closest('.lesson'); if (!row) return;
+    const l = LESSONS.find(x => x.id === row.dataset.id); if (!l) return;
+    const fromSheet = !!e.target.closest('#sheetList');
+    log('LESSON_PICK', { id: l.id, from: fromSheet ? 'library' : 'list', cur: cur && cur.id });
+    select(l, true); if (fromSheet) closeLibrary('pick');
+  }
+  $('lessons').addEventListener('click', onLessonListClick);
+  $('sheetList').addEventListener('click', onLessonListClick);
+  const onLessonKey = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('lesson')) { e.preventDefault(); onLessonListClick(e); } };
+  $('lessons').addEventListener('keydown', onLessonKey); $('sheetList').addEventListener('keydown', onLessonKey);
+
+  // ---------- lesson library (bottom sheet): a second VIEW of the same lesson state, never a second lesson system
+  function openLibrary(src) {
+    if (libOpen) return; libOpen = true; renderLessons();
+    const sh = $('sheet'); sh.hidden = false; $('libBtn').setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden';
+    libReturnFocus = document.activeElement; log('LIBRARY_OPEN', { src: src || 'ui', cur: cur && cur.id });
+    const row = cur && $('sheetList').querySelector('.lesson[data-id="' + cur.id + '"]');
+    if (row) { try { row.scrollIntoView({ block: 'center' }); } catch (e) { } row.focus({ preventScroll: true }); } else $('sheetClose').focus();
+  }
+  function closeLibrary(src) {
+    if (!libOpen) return; libOpen = false; $('sheet').hidden = true; $('sheetList').innerHTML = ''; $('libBtn').setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
+    log('LIBRARY_CLOSE', { src: src || 'ui' }); try { (libReturnFocus && libReturnFocus.focus) ? libReturnFocus.focus({ preventScroll: true }) : null; } catch (e) { } libReturnFocus = null;
+  }
+  $('libBtn').addEventListener('click', e => { e.preventDefault(); libOpen ? closeLibrary('button') : openLibrary('button'); });
+  $('sheetClose').addEventListener('click', () => closeLibrary('close'));
+  $('sheetBg').addEventListener('click', () => closeLibrary('backdrop'));
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && libOpen) { e.preventDefault(); closeLibrary('escape'); } });
+  audio.addEventListener('play', () => { if (libOpen) renderLessons(); }); audio.addEventListener('pause', () => { if (libOpen) renderLessons(); });
   let dlBusy = false;
   async function download(lesson, quiet) {
     if (cachedSet[lesson.id]) { if (!quiet) toast('Already saved offline.'); return true; }
@@ -258,7 +304,7 @@
     const end = e => { if (!dragging) return; dragging = false; try { bar.releasePointerCapture(e.pointerId); } catch (x) { } const d = audio.duration; if (isFinite(d)) seekTo(frac * d, 'scrub'); };
     bar.addEventListener('pointerup', end); bar.addEventListener('pointercancel', end);
   })();
-  window.addEventListener('keydown', e => { if (e.target && /input|textarea/i.test(e.target.tagName)) return; if (e.code === 'Space') { e.preventDefault(); toggle(); } else if (e.code === 'ArrowLeft') seekBy(-15); else if (e.code === 'ArrowRight') seekBy(15); });
+  window.addEventListener('keydown', e => { if (e.target && /input|textarea/i.test(e.target.tagName)) return; if (libOpen) return; if (e.code === 'Space') { e.preventDefault(); toggle(); } else if (e.code === 'ArrowLeft') seekBy(-15); else if (e.code === 'ArrowRight') seekBy(15); });
 
   // ---------- boot
   async function boot() {
@@ -276,6 +322,6 @@
     await loadLesson(LESSONS.find(l => l.id === startId), { autoplay: false });   // never autoplay on open
     log('BOOT', { version: VERSION, lesson: startId });
   }
-  window.__bkk = { logEvent: log, get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
+  window.__bkk = { openLibrary, closeLibrary, get libraryOpen() { return libOpen; }, lessonStatus, logEvent: log, get state() { return state; }, get lesson() { return cur && cur.id; }, log: () => LOG.slice(), audio, select: (n, ap) => select(LESSONS[n - 1], ap), seekBy, seekTo, play, pause, go, retry, store: () => store, loadDone: () => loadPromise, LESSONS: () => LESSONS, download, isCached, reconcile };
   boot();
 })();
